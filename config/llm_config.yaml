@@ -1,0 +1,42 @@
+# Default settings
+default_model: "openai-gpt35"
+default_embedding_model: "openai-ada"
+
+# LLM Configuration
+models:
+  - model_alias: openai-gpt4  # Our custom alias
+    model: gpt-4-1106-preview  # Actual LiteLLM model identifier
+
+  - model_alias: openai-gpt35
+    model: gpt-3.5-turbo
+    # api_key: "${OPENAI_API_KEY}"
+
+  - model_alias: gemini-2.0-flash
+    model: "gemini/gemini-2.0-flash"
+
+  - model_alias: gemini-1.5-pro
+    model: "gemini/gemini-1.5-pro"
+
+  - model_alias: ollama-mistral
+    model: "ollama/mistral"
+    api_base: "http://localhost:11434"
+
+  - model_alias: ollama-llama2
+    model: "ollama/llama2"
+    api_base: "http://localhost:11434"
+
+
+# Embedding models
+embeddings:
+  - model_alias: openai-ada
+    model: text-embedding-ada-002
+    # api_key: "${OPENAI_API_KEY}"
+
+  - model_alias: ollama-llama2
+    model: "ollama/llama2"
+    api_base: "http://localhost:11434"
+
+# Common parameters that apply to all models unless overridden
+common_parameters:
+  temperature: 0.7
+  max_tokens: 4096

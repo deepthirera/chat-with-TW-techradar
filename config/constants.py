@@ -16,6 +16,9 @@ DATA_DIR = ROOT_DIR / "data"
 RAW_DATA_DIR = DATA_DIR / "raw"
 PROCESSED_DATA_DIR = DATA_DIR / "processed"
 
+# Config path
+LLM_CONFIG_FILE = ROOT_DIR / "config" / "llm_config.yaml"
+
 # Basic application settings
 DEBUG = False
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
