@@ -1,0 +1,4 @@
+fileignoreconfig:
+- filename: uv.lock
+  checksum: 94242d209c8ac11b13e07ca5aabbdceb0ea9fbc46e5c564787939904a69cd598
+version: "1.0"
