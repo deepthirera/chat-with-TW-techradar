@@ -5,10 +5,9 @@ from langchain.docstore.document import Document
 from pathlib import Path
 from logger import logger
 import re
-from config.constants import (
+from config import (
     TECH_RADAR_FILENAME_PATTERN,
     PDF_FILE_PATTERN,
-    REQUIRED_METADATA_FIELDS,
 )
 
 class DocumentLoader:
@@ -18,7 +17,7 @@ class DocumentLoader:
         self.folder_path = Path(folder_path)
         
     def load_radar_files(self) -> Dict[str, Dict[str, List[Document]]]:
-        docs_by_created_date = {}
+        result_docs = []
         
         try:
             pdf_files = list(self.folder_path.glob(PDF_FILE_PATTERN))
@@ -32,10 +31,11 @@ class DocumentLoader:
                     if self._isvalid_pdf(filepath):
                         loader = PyPDFLoader(str(filepath), mode='single')
                         doc = loader.load()
-                        doc_metadata = doc[0].metadata
-                        created_date = doc_metadata.get(REQUIRED_METADATA_FIELDS[0])  # creationdate
-                        docs_by_created_date[created_date] = {"original_doc": doc[0]}
-                        logger.info(f"Successfully loaded {filepath.name} created on {created_date}")
+                        # doc_metadata = doc[0].metadata
+                        # created_date = doc_metadata.get(REQUIRED_METADATA_FIELDS[0])  # creationdate
+                        # result_docs[created_date] = {"original_doc": doc[0]}
+                        result_docs.extend(doc)
+                        logger.info(f"Successfully loaded {filepath.name}")
                     else:
                         logger.warning(f"Skipping {filepath.name} as it is not a valid Tech Radar PDF file.")
                 except Exception as e:
@@ -46,12 +46,12 @@ class DocumentLoader:
             logger.error(f"Facing exception while loading pdf files from {self.folder_path}: {str(e)}")
             raise RuntimeError(f"Error accessing folder {self.folder_path}: {str(e)}")
         
-        if not docs_by_created_date:
+        if not result_docs:
             logger.error("Looks like loading pdf files is not successful")
             raise ValueError("Looks like loading pdf files is not successful")
             
-        logger.info(f"Successfully loaded {len(docs_by_created_date)} Tech Radar PDF files")
-        return docs_by_created_date
+        logger.info(f"Successfully loaded {len(result_docs)} Tech Radar PDF files")
+        return result_docs
         
     def _isvalid_pdf(self, filepath: Path) -> bool:
         if filepath.suffix.lower() != '.pdf':

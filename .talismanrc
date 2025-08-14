@@ -1,4 +1,8 @@
 fileignoreconfig:
+- filename: sample_env
+  checksum: b975c180b33d65c68f4411bc86c17def805143ebb0e8f123c2d49de8f132aabc
 - filename: uv.lock
-  checksum: 94242d209c8ac11b13e07ca5aabbdceb0ea9fbc46e5c564787939904a69cd598
+  checksum: 34923d27a87d85bfaf60db6633e9bc9a10b6441cc18c5cb30818926f6bc095f1
+- filename: tests/llm/test_model_manager.py
+  checksum: 1ed70c3f2b32f25d639af61f7f28445106c69aca61eb7ae7c78517f5a8a4de3f
 version: "1.0"

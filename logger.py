@@ -1,4 +1,4 @@
-from config.constants import LOG_LEVEL, LOG_FORMAT
+from config import LOG_LEVEL, LOG_FORMAT
 import logging
 
 class Logger:
