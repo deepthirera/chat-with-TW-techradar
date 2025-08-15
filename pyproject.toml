@@ -19,6 +19,9 @@ dependencies = [
     "pyyaml>=6.0.1",
 ]
 
+[project.scripts]
+seed-db = "src.scripts.db_management:migrate_and_seed"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.4.1",
@@ -31,4 +34,6 @@ pythonpath = [
 ]
 
 [tool.setuptools]
-packages = ["config", "src", "src.llm"]
+packages = [
+    "src",
+]

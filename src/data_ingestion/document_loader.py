@@ -3,7 +3,7 @@ from pypdf import PdfReader
 from typing import Dict, List
 from langchain.docstore.document import Document
 from pathlib import Path
-from logger import logger
+from src.utils.logger import logger
 import re
 from config import (
     TECH_RADAR_FILENAME_PATTERN,
@@ -31,9 +31,6 @@ class DocumentLoader:
                     if self._isvalid_pdf(filepath):
                         loader = PyPDFLoader(str(filepath), mode='single')
                         doc = loader.load()
-                        # doc_metadata = doc[0].metadata
-                        # created_date = doc_metadata.get(REQUIRED_METADATA_FIELDS[0])  # creationdate
-                        # result_docs[created_date] = {"original_doc": doc[0]}
                         result_docs.extend(doc)
                         logger.info(f"Successfully loaded {filepath.name}")
                     else:

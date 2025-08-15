@@ -1,12 +1,11 @@
-from pathlib import Path
 import os
 from typing import Dict, Any
 import litellm
-from litellm import completion, embedding
+from litellm import completion
 from config import ( DEFAULT_MODEL, DEFAULT_EMBEDDING_MODEL, 
                     MODELS_CONFIG, EMBEDDING_MODELS_CONFIG, 
                     LLM_COMMON_PARAMETERS )
-from logger import logger
+from src.utils.logger import logger
 from dotenv import load_dotenv
 from langchain_litellm import ChatLiteLLM
 from langchain_ollama import OllamaEmbeddings
@@ -49,30 +48,6 @@ class LLMModelManager:
             drop_params=True,
             **params
         )
-
-    def get_embedding(
-        self,
-        text: list[str],
-        **kwargs
-    ) -> list[float]:
-        """Get embeddings for the given text.
-        
-        Args:
-            text: Text to get embeddings for
-            model: Model to use. If None, uses default embedding model from config
-        
-        Returns:
-            List of embedding values
-        """
-        params = self._prepare_embedding_model_params()
-        params.update(kwargs)
-        response = embedding(
-            input=text,
-            drop_params=True,
-            **params
-        )
-        
-        return response['data'][0]['embedding']
     
     def get_chat_model(self, **kwargs) -> ChatLiteLLM:
         params = self._prepare_chat_model_params()
@@ -83,13 +58,16 @@ class LLMModelManager:
         params = self._prepare_embedding_model_params()
         params.update(kwargs)
         provider = params.get("provider")
-        embedding_model = {
-            "openai": OpenAIEmbeddings,
-            "ollama": OllamaEmbeddings,
-            "google": GoogleGenerativeAIEmbeddings
-        }.get(provider)
 
-        return embedding_model(**params)
+        match str(provider):
+            case "openai":
+                return OpenAIEmbeddings(**params)
+            case "google":
+                return GoogleGenerativeAIEmbeddings(**params)
+            case "ollama":
+                return OllamaEmbeddings(model=params.get("model"), base_url=params.get("api_base"))
+            case _:
+                raise ValueError(f"Invalid provider: {provider}")
 
     def _prepare_chat_model_params(self):
         params = LLM_COMMON_PARAMETERS.copy()

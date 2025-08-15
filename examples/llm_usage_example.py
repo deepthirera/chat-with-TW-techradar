@@ -16,13 +16,6 @@ def main():
     print("\nChat Response:")
     print(response['choices'][0]['message']['content'])
 
-    # Example of getting embeddings
-    embed_input = [ message["content"] for message in messages ]
-    embeddings = llm_manager.get_embedding(embed_input)
-
-    print("\nEmbed Response:")
-    print(embeddings)
-
 
 if __name__ == "__main__":
     # Run using this comamnd

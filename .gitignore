@@ -21,3 +21,6 @@ data/
 
 # Environment variables
 .env
+
+# Database
+chroma_db/*

@@ -1,6 +1,6 @@
 import re
 from langchain_text_splitters import RecursiveCharacterTextSplitter
-from logger import logger
+from src.utils.logger import logger
 from functools import reduce
 class DocumentProcessor:
     def __init__(self, chunk_size=1000, chunk_overlap=200):
