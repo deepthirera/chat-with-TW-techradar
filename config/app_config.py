@@ -36,7 +36,6 @@ PDF_FILE_PATTERN = "*.pdf"
 REQUIRED_METADATA_FIELDS = ['creationdate']
 
 SYSTEM_PROMPT="""You are an assistant for question-answering queries related to ThoughtWorks TechRadar. Use the following pieces of retrieved context to answer the question. If you don't know the answer, just say that you don't know. Use ten sentences maximum and keep the answer concise.
-Question: {question}
 Context: {context}
 Answer:
 """

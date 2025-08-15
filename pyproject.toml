@@ -35,5 +35,6 @@ pythonpath = [
 
 [tool.setuptools]
 packages = [
+    "config",
     "src",
 ]

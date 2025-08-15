@@ -37,7 +37,7 @@ EMBEDDING_MODELS_CONFIG = [
     },
     {
         "model_alias": "ollama-nominic",
-        "model": "ollama/nomic-embed-text",
+        "model": "nomic-embed-text",
         "api_base": "http://localhost:11434",
         "provider": OLLAMA
     },
