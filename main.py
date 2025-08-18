@@ -1,11 +1,13 @@
 import gradio as gr
-from config import SYSTEM_PROMPT
+from dotenv import load_dotenv
+from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
-from langchain_core.output_parsers import StrOutputParser
+
+from config import SYSTEM_PROMPT
 from src.llm.model_manager import LLMModelManager
 from src.vector_store.vector_store import VectorStore
-from dotenv import load_dotenv
+
 
 class ChatBot:
     def __init__(self):
@@ -20,22 +22,20 @@ class ChatBot:
 
         retriever = VectorStore().load().as_retriever()
 
-        rag_chain = (
+        return (
             {"context": retriever, "question": RunnablePassthrough()}
             | prompt
             | llm
             | StrOutputParser()
         )
-        return rag_chain
 
     def chat(self, message, history):
-        response = self.rag_chain.invoke(str(message))
-        return response
+        return self.rag_chain.invoke(str(message))
 
 def main():
     """Initialize and launch the Gradio chat interface."""
     load_dotenv()
-    
+
     chatbot = ChatBot()
     app = gr.ChatInterface(
         fn=chatbot.chat,

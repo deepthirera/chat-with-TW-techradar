@@ -92,3 +92,35 @@ This will launch a Gradio chat interface where you can interact with the Thought
 ├── tests/                # Test files
 └── examples/             # Usage examples
 ```
+
+## Code Quality
+
+The project uses `ruff` for code quality checks and linting. Ruff is a fast Python linter written in Rust.
+
+### Running Code Quality Checks
+
+1. Install development dependencies (if not already installed):
+```bash
+uv pip install -e ".[dev]"
+```
+
+2. Run ruff to check code quality:
+```bash
+ruff check .
+```
+
+3. Auto-fix issues that can be fixed automatically:
+```bash
+ruff check . --fix
+```
+
+### Ruff Configuration
+
+The ruff configuration is defined in `pyproject.toml`. Key settings include:
+- Python version target: 3.12
+- Line length: 88 characters
+- Enabled rules: All rules are enabled by default
+- Ignored rules: Documented in `pyproject.toml` under `[tool.ruff.lint]`
+- Test-specific configurations: Special rules for test files
+
+Run `ruff check .` before committing changes to ensure code quality standards are met.

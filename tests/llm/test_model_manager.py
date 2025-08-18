@@ -32,7 +32,7 @@ def expected_params_for_model(model_alias):
 
 def test_model_default_from_config(env_vars):
     """Test that model defaults to config value when not in env"""
-    with patch.dict(os.environ, {'model_name': '', 'embedding_model_name': '', **env_vars}, clear=True), \
+    with patch.dict(os.environ, {'MODEL_NAME': '', 'EMBEDDING_MODEL_NAME': '', **env_vars}, clear=True), \
         patch('src.llm.model_manager.completion', return_value={'choices': [{'message': {'content': 'test-response'}}]}):
         manager = LLMModelManager()
         manager.chat_completion([])
@@ -47,7 +47,7 @@ def test_chat_completion_parameters(env_vars, expected_params_for_model, model_a
     """Test that chat completion is called with correct parameters"""
     messages = [{"role": "user", "content": "Hello"}]
     
-    with patch.dict(os.environ, {'model_name': model_alias, **env_vars}), \
+    with patch.dict(os.environ, {'MODEL_NAME': model_alias, **env_vars}), \
         patch('src.llm.model_manager.completion') as mock_completion:
         
         print("**************")
@@ -71,7 +71,7 @@ def test_chat_completion_parameters(env_vars, expected_params_for_model, model_a
 def test_get_chat_model_to_return_chat_model_instance(env_vars, expected_params_for_model, model_alias):
     """Test that chat completion is called with correct parameters"""
     
-    with patch.dict(os.environ, {'model_name': model_alias, **env_vars}), \
+    with patch.dict(os.environ, {'MODEL_NAME': model_alias, **env_vars}), \
         patch('src.llm.model_manager.ChatLiteLLM') as mock_chat_completion:
         
         manager = LLMModelManager()
@@ -90,7 +90,7 @@ def test_override_parameters_in_completion(env_vars):
         'max_tokens': 100
     }
     
-    with patch.dict(os.environ, {'model_name': 'gpt-5-nano', **env_vars}), \
+    with patch.dict(os.environ, {'MODEL_NAME': 'gpt-5-nano', **env_vars}), \
         patch('src.llm.model_manager.completion') as mock_completion:
         
         manager = LLMModelManager()

@@ -27,7 +27,46 @@ seed-db = "src.scripts.db_management:migrate_and_seed"
 dev = [
     "pytest>=8.4.1",
     "pytest-mock>=3.14.1",
+    "ruff>=0.3.0",
 ]
+
+[tool.ruff]
+line-length = 88
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "D",  # Ignore docstring rules temporarily
+    "ANN", # Ignore type annotation rules temporarily
+    "FBT", # Ignore boolean trap rules
+    "ERA", # Ignore eradicate rules
+    "RUF001", # Ignore ambiguous unicode rule
+    "PLR2004", # Ignore magic numbers
+    "TRY", # Ignore exception handling rules
+    "BLE", # Ignore blind exception rules
+    "EM", # Ignore exception message rules
+    "B904", # Ignore exception chaining rules
+    "E501", # Ignore line length issues
+    "F403"
+]
+
+# Exclude files and directories
+exclude = [
+    ".git",
+    ".venv",
+    "build",
+    "dist",
+    "tests/**/*.py",  # Ignore all Python files in tests directory
+]
+
+[tool.ruff.lint.per-file-ignores]
+"main.py" = [
+    "ARG002",  # Allow unused history argument in chat method
+]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
 
 [tool.pytest.ini_options]
 pythonpath = [
