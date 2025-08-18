@@ -6,17 +6,17 @@ This module contains the models and their aliases for the RAG application.
 DEFAULT_MODEL = "ollama-mistral"
 DEFAULT_EMBEDDING_MODEL = "ollama-nominic"
 OPENAI = "openai"
-GOOGLE = "google"
+GEMINI = "gemini"
 OLLAMA = "ollama"
 
 MODELS_CONFIG = [
     {
-        "model_alias": "openai-gpt4",
-        "model": "gpt-4-1106-preview"
+        "model_alias": "gpt-5-mini",
+        "model": "gpt-5-mini-2025-08-07"
     },
     {
-        "model_alias": "openai-gpt35",
-        "model": "gpt-3.5-turbo"
+        "model_alias": "gpt-5-nano",
+        "model": "gpt-5-nano-2025-08-07"
     },
     {
         "model_alias": "gemini-2.0-flash",
@@ -36,6 +36,11 @@ EMBEDDING_MODELS_CONFIG = [
         "provider": OPENAI
     },
     {
+        "model_alias": "openai-embedding",
+        "model": "text-embedding-3-small",
+        "provider": OPENAI
+    },
+    {
         "model_alias": "ollama-nominic",
         "model": "nomic-embed-text",
         "api_base": "http://localhost:11434",
@@ -44,7 +49,7 @@ EMBEDDING_MODELS_CONFIG = [
     {
         "model_alias": "gemini-embedding-001",
         "model": "models/gemini-embedding-001",
-        "provider": GOOGLE
+        "provider": GEMINI
     }
 ]
 

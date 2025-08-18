@@ -1,4 +1,0 @@
-model_name="gemini-2.0-flash"
-GEMINI_API_KEY=
-
-embedding_model_name="ollama-nominic"

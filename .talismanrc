@@ -1,8 +1,14 @@
 fileignoreconfig:
-- filename: sample_env
-  checksum: b975c180b33d65c68f4411bc86c17def805143ebb0e8f123c2d49de8f132aabc
+- filename: .env.gemini.template
+  checksum: 09ef67253ef2f6a4881d54c6056dd73f77e10dee412bd7ae39e246eb1b82f541
+- filename: .env.ollama.template
+  checksum: 18a5f917a11c322238995638304daa64937ae21c54169113fe7a87087d588550
+- filename: .env.openai.template
+  checksum: 3ac886162ac7d1f9aaef162d21fb98e2f02f0ba8109e915624e74cf58cf7f182
 - filename: uv.lock
-  checksum: 34923d27a87d85bfaf60db6633e9bc9a10b6441cc18c5cb30818926f6bc095f1
-- filename: tests/llm/test_model_manager.py
-  checksum: 1ed70c3f2b32f25d639af61f7f28445106c69aca61eb7ae7c78517f5a8a4de3f
+  checksum: a5e2abc168de6b84e3b92588bee7ebcea73770ceb1da804d5074f1100b5fc0eb
+- filename: src/llm/model_manager.py
+  checksum: 70a77ec5615aff5d3a72c82fd62053f443bad4248c28b4daad3c4de638997933
+- filename: README.md
+  checksum: 69114d78e10b952f8ce8449d9111be5b13478e141979c47efce5ddce0aedfaf8
 version: "1.0"

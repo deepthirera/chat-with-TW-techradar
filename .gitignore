@@ -13,8 +13,7 @@ wheels/
 .DS_Store
 
 # Project specific
-memory-bank/project-information.md
-data/
+memory-bank/*
 
 # Log files
 *.log
