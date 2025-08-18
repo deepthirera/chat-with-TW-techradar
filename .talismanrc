@@ -11,4 +11,6 @@ fileignoreconfig:
   checksum: 70a77ec5615aff5d3a72c82fd62053f443bad4248c28b4daad3c4de638997933
 - filename: README.md
   checksum: 69114d78e10b952f8ce8449d9111be5b13478e141979c47efce5ddce0aedfaf8
+- filename: tests/llm/test_model_manager.py
+  checksum: bb39a70d923f987ac4d6fdfbbbd4c34a6810bca094097ac55a0462a25c4f867b
 version: "1.0"
