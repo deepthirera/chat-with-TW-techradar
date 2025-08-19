@@ -16,7 +16,7 @@ class VectorStore:
     def create(self, documents):
         db = self.load()
         db.reset_collection()
-        db.add_texts(documents, embedding=self.embedding_model,
+        db.add_documents(documents, embedding=self.embedding_model,
                         collection_name=self.collection_name,
                         persist_directory=self.persist_directory,
                     )

@@ -32,6 +32,7 @@ LOG_DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
 TECH_RADAR_FILENAME_PATTERN = r"tr_technology_radar"
 PDF_FILE_PATTERN = "*.pdf"
 REQUIRED_METADATA_FIELDS = ["creationdate"]
+REGEX_PATTERN = r'\d{1,3}\. [^"\n]+\n(?:Adopt|Trial|Hold|Assess)'
 
 SYSTEM_PROMPT = """You are an assistant for question-answering queries related to ThoughtWorks TechRadar.
 Use the following pieces of retrieved context to answer the question. If you don't know the answer,

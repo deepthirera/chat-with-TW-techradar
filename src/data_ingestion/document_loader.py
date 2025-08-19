@@ -18,7 +18,7 @@ class DocumentLoader:
     def __init__(self, folder_path: str):
         self.folder_path = Path(folder_path)
 
-    def load_radar_files(self) -> dict[str, dict[str, list[Document]]]:
+    def load_radar_files(self) -> list[Document]:
         result_docs = []
 
         try:

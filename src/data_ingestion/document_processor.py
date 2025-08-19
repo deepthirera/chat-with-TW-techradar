@@ -1,6 +1,6 @@
 import re
-from functools import reduce
 
+from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from src.utils.logger import logger
@@ -44,8 +44,21 @@ class DocumentProcessor:
         chunked_docs = []
         logger.info("Chunking documents...")
         for doc_dict in loaded_docs:
+            final_metadata = self._process_metadata(doc_dict.metadata)
             chunks = self.split_using_lib(doc_dict.page_content)
-            chunk_metadata = reduce(lambda result_string, metadata_tuple: f"{result_string}{metadata_tuple[0]}: {metadata_tuple[1]} " if metadata_tuple[0] in ["creationdate", "source"] else f"{result_string}", doc_dict.metadata.items(), "")
-            rich_chunks = [ chunk_metadata + "\n" + chunk for chunk in chunks]
-            chunked_docs.extend(rich_chunks)
+            [ chunked_docs.extend([Document(page_content=chunk, metadata=final_metadata) ]) for chunk in chunks ]
         return chunked_docs
+
+    def _process_metadata(self, metadata):
+        source = metadata.get("source")
+        filename, title_parts = "", ""
+        if source:
+            filename = source.split("/")[-1]
+            title_parts = filename.title().split("_")[1:-1]
+        return  {
+            "creationdate": metadata.get("creationdate", ""),
+            "filename": filename,
+            "title": " ".join(title_parts),
+            "volume": title_parts[-1][-2:] if title_parts else "",
+            "period": "April 2025",
+        }
