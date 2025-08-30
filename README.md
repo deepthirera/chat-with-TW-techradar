@@ -26,7 +26,7 @@ source .venv/bin/activate
 2. Install project dependencies:
 
 ```bash
-uv pip install -r pyproject.toml --all-extras
+uv pip install -e .
 ```
 
 ## Running the Application
@@ -80,7 +80,8 @@ ollama pull nomic-embed-text
 1. First, ingest the data (required only once):
 
 ```bash
-python -m src.scripts.db_management
+uv run seed-vector-basic
+uv run seed-vector-metadata
 ```
 
 2. Launch the application:

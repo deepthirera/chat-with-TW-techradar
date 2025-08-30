@@ -140,7 +140,23 @@ software versions, while reducing risk through incremental rollout to selected u
                 "ring": "Hold"
             }
         }
-        print(quadrant_metadata)
+        
+        # Assert that all expected items are present in the result
+        for item_name, expected_data in expected_metadata.items():
+            self.assertIn(item_name, quadrant_metadata, f"Item '{item_name}' not found in quadrant_metadata")
+            actual_data = quadrant_metadata[item_name]
+            self.assertEqual(actual_data["quadrant"], expected_data["quadrant"], 
+                           f"Quadrant mismatch for '{item_name}'")
+            self.assertEqual(actual_data["ring"], expected_data["ring"], 
+                           f"Ring mismatch for '{item_name}'")
+            
+        # Assert that the base metadata is included in each item
+        for item_name, item_data in quadrant_metadata.items():
+            self.assertEqual(item_data["creationdate"], base_metadata["creationdate"])
+            self.assertEqual(item_data["filename"], base_metadata["filename"])
+            self.assertEqual(item_data["title"], base_metadata["title"])
+            self.assertEqual(item_data["volume"], base_metadata["volume"])
+            self.assertEqual(item_data["period"], base_metadata["period"])
 
 if __name__ == '__main__':
     unittest.main()

@@ -21,7 +21,8 @@ dependencies = [
 ]
 
 [project.scripts]
-seed-db = "src.scripts.db_management:migrate_and_seed"
+seed-vector-basic = "src.scripts.db_management:vector_migrate_and_seed"
+seed-vector-metadata = "src.scripts.db_management:vector_metadata_migrate_and_seed"
 
 [project.optional-dependencies]
 dev = [
