@@ -12,8 +12,13 @@ wheels/
 # macOS system files
 .DS_Store
 
+VSCode
+.vscode/
+tech_radar_chat.code-workspace
+
 # Project specific
 memory-bank/*
+*.ipynb
 
 # Log files
 *.log

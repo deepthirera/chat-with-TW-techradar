@@ -1,11 +1,11 @@
 import unittest
 from unittest.mock import patch, Mock
 from langchain_core.documents import Document
-from src.data_ingestion.document_processor import DocumentProcessor
+from src.data_ingestion.doc_processor_with_metadata import DocProcessorWithMetadata
 
-class TestDocumentProcessor(unittest.TestCase):
+class TestDocProcessorWithMetadata(unittest.TestCase):
     def setUp(self):
-        self.processor = DocumentProcessor()
+        self.processor = DocProcessorWithMetadata()
         self.sample_metadata = {
             'producer': 'Adobe PDF Library 17.0',
             'creator': 'Adobe InDesign 20.1 (Macintosh)',
@@ -19,7 +19,7 @@ class TestDocumentProcessor(unittest.TestCase):
         }
         self.sample_text = "This is a sample text"
         
-    @patch('src.data_ingestion.document_processor.RecursiveCharacterTextSplitter')
+    @patch('src.data_ingestion.doc_processor_with_metadata.RecursiveCharacterTextSplitter')
     def test_chunk_pdfs(self, mock_splitter):
         mock_splitter_instance = Mock()
         mock_splitter.return_value = mock_splitter_instance
@@ -61,7 +61,7 @@ class TestDocumentProcessor(unittest.TestCase):
             'volume': '',
             'period': 'April 2025'
         }
-        result = self.processor._process_metadata(metadata)
+        result = self.processor._process_base_metadata(metadata)
         self.assertEqual(result, expected)
 
     def test_process_metadata_invalid_source(self):
@@ -74,8 +74,73 @@ class TestDocumentProcessor(unittest.TestCase):
             'volume': '',
             'period': 'April 2025'
         }
-        result = self.processor._process_metadata(metadata)
+        result = self.processor._process_base_metadata(metadata)
         self.assertEqual(result, expected)
+
+    def test_data_extraction(self):
+        cleaned_text = """
+Tools Languages and Frameworks
+
+Techniques
+Adopt
+1. 1% canary
+2. Retrieval-augmented generation (RAG) 
+Trial
+12. Using GenAI to understand 
+legacy codebases 
+Assess
+13. AI team assistants
+14. Dynamic few-shot prompting
+Hold
+20. Complacency with AI-generated code
+21. Enterprise-wide integration 
+test environments
+
+Techniques
+1. 1% canary
+Adopt
+For many years, we’ve used the canary release approach to encourage early feedback on new 
+software versions, while reducing risk through incremental rollout to selected users. 
+"""
+        base_metadata = {
+          'creationdate': '2025-04-08T11:51:49-03:00',
+          'filename': 'tr_technology_radar_vol_32_en.pdf',
+          'title': 'Technology Radar Vol 32',
+          'volume': '32',
+          'period': 'April 2025'
+        }
+        quadrant_metadata = self.processor._process_metadata(cleaned_text, base_metadata)
+        expected_metadata = {
+            "1. 1% canary": {
+                "quadrant": "Techniques",
+                "ring": "Adopt"
+            },
+            "2. Retrieval-augmented generation (RAG)": {
+                "quadrant": "Techniques",
+                "ring": "Adopt"
+            },
+            "12. Using GenAI to understand legacy codebases": {
+                "quadrant": "Techniques",
+                "ring": "Trial"
+            },
+            "13. AI team assistants": {
+                "quadrant": "Techniques",
+                "ring": "Assess"
+            },
+            "14. Dynamic few-shot prompting": {
+                "quadrant": "Techniques",
+                "ring": "Assess"
+            },
+            "20. Complacency with AI-generated code": {
+                "quadrant": "Techniques",
+                "ring": "Hold"
+            },
+            "21. Enterprise-wide integration test environments": {
+                "quadrant": "Techniques",
+                "ring": "Hold"
+            }
+        }
+        print(quadrant_metadata)
 
 if __name__ == '__main__':
     unittest.main()
