@@ -1,38 +1,59 @@
+from collections import defaultdict
 import re
 from datetime import datetime
 from langchain_core.documents import Document
+from regex import B
+from src.data_ingestion.tech_radar_graph_builder import TechRadarGraphBuilder
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from src.utils.logger import logger
 
 
-class DocProcessorWithMetadata:
+
+class GraphProcessorWithMetadata:
     def __init__(self, chunk_size=1000, chunk_overlap=200):
         self.chunk_size = chunk_size
         self.chunk_overlap = chunk_overlap
+        self.graph_builder = TechRadarGraphBuilder()
 
     def split_using_lib(self, docs):
         pattern = r'\d{1,3}\. [^"\n]+\n(?:Adopt|Trial|Hold|Assess)'
         splitter = RecursiveCharacterTextSplitter(chunk_size=1000, is_separator_regex=True, separators=[pattern])
         return splitter.split_text(docs)
 
-    def chunk_pdfs(self, loaded_docs):
+    def graph_content(self, loaded_docs):
         """Process each document and split into chunks at title boundaries."""
-        chunked_docs = []
+        graph_content = defaultdict(dict)
+        self.graph_builder.create_quadrants()
+        # self.graph_builder.create_rings()
         logger.info(f"Chunking documents...{len(loaded_docs)}")
         for doc_dict in loaded_docs:
             base_metadata = self._process_base_metadata(doc_dict.metadata)
             cleaned_page_content = self._cleanup_page_content(doc_dict.page_content)
-            final_metadata = self._process_metadata(cleaned_page_content, base_metadata)
+            all_blips_metadata = self._process_metadata(cleaned_page_content)
             chunks = self.split_using_lib(cleaned_page_content)
+            graph_content[base_metadata["title"]]["metadata"] = base_metadata
+            blips = []
+            other_chunks = []
+            self.graph_builder.create_radar_node(base_metadata)
             for chunk in chunks:
                 chunk_title_response = re.match(r'\d{1,3}\. [^"\n]+', chunk)
                 if chunk_title_response:
                     chunk_title = chunk_title_response.group(0).strip()
-                    chunked_docs.extend([Document(page_content=chunk, metadata=final_metadata.get(chunk_title, base_metadata)) ])
+                    current_blip_metadata = all_blips_metadata.get(chunk_title, base_metadata)
+                    blip_detail = {
+                        "doc": chunk,
+                        "blip_title": chunk_title,
+                        **current_blip_metadata,
+                        **base_metadata
+                    }
+                    self.graph_builder.create_blip_nodes(blip_detail)
+                    blips.extend([blip_detail])
                 else:
-                    chunked_docs.extend([Document(page_content=chunk, metadata=base_metadata) ])
-        return chunked_docs
+                    other_chunks.extend([Document(page_content=chunk, metadata=base_metadata) ])
+            graph_content[base_metadata["title"]]["blips"] = blips
+            graph_content[base_metadata["title"]]["other_chunks"] = other_chunks
+        return graph_content
 
     def _cleanup_page_content(self, raw_page_content):
         mega_pattern = (
@@ -43,7 +64,7 @@ class DocProcessorWithMetadata:
         cleaned = re.sub(mega_pattern, "", raw_page_content, flags=re.MULTILINE)
         return cleaned.strip()
 
-    def _process_metadata(self, cleaned_text, base_metadata):
+    def _process_metadata(self, cleaned_text):
         result = {}
         for quadrant_title in ["Techniques", "Platforms", "Tools", "Languages and \nFrameworks"]:
             quadrant_search_response = self._extract_whole_quadrant(quadrant_title, cleaned_text)
@@ -65,7 +86,6 @@ class DocProcessorWithMetadata:
                             if ring_item and re.match(r"\d+\.", ring_item):
                                 cleaned_item = re.sub(r"\s+", " ", ring_item).strip()
                                 result[cleaned_item] = {
-                                    **base_metadata,
                                     "quadrant": quadrant_title,
                                     "ring": ring_title,
                                 }

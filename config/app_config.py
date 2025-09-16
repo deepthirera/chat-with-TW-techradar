@@ -22,6 +22,12 @@ CHROMA_PATH = os.getenv("CHROMA_PATH", "chroma_db")
 COLLECTION_NAME = os.getenv("COLLECTION_NAME", "tech_radar_store")
 TEXT_EMBEDDING_MODEL = os.getenv("TEXT_EMBEDDING_MODEL", "nomic-embed-text")
 
+# Graph database (Neo4j)
+NEO4J_URI = os.getenv("NEO4J_URI", "bolt://localhost:7687")
+NEO4J_USERNAME = os.getenv("NEO4J_USERNAME", "neo4j")
+NEO4J_PASSWORD = os.getenv("NEO4J_PASSWORD", "")
+NEO4J_DATABASE = os.getenv("NEO4J_DATABASE", "neo4j")
+
 # Basic application settings
 DEBUG = False
 LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO")

@@ -6,7 +6,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 from config import SYSTEM_PROMPT
 from src.llm.model_manager import LLMModelManager
-from src.vector_store.vector_store import VectorStore
+from src.stores.vector_store import VectorStore
 
 
 class ChatBot:

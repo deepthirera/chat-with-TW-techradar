@@ -53,13 +53,13 @@ class TestDocProcessorWithMetadata(unittest.TestCase):
 
     def test_process_metadata_missing_source(self):
         """Test metadata processing with missing source"""
-        metadata = {'creationdate': '2025-04-08T11:51:49-03:00'}
+        metadata = {'creationdate': '2024-06-30T11:51:49-03:00'}
         expected = {
-            'creationdate': '2025-04-08T11:51:49-03:00',
+            'creationdate': '2024-06-30T11:51:49-03:00',
             'filename': '',
             'title': '',
             'volume': '',
-            'period': 'April 2025'
+            'period': 'June 2024'
         }
         result = self.processor._process_base_metadata(metadata)
         self.assertEqual(result, expected)
@@ -72,7 +72,7 @@ class TestDocProcessorWithMetadata(unittest.TestCase):
             'filename': '',
             'title': '',
             'volume': '',
-            'period': 'April 2025'
+            'period': ''
         }
         result = self.processor._process_base_metadata(metadata)
         self.assertEqual(result, expected)
