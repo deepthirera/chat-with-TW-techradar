@@ -14,7 +14,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.stores.graph_store import GraphStore
+from src.stores.graph_store import TechGraphStore
 from src.utils.logger import logger
 
 
@@ -24,7 +24,7 @@ def main():
     try:
         # Initialize GraphStore (uses environment variables or defaults)
         logger.info("Connecting to Neo4j using GraphStore...")
-        graph_store = GraphStore(
+        graph_store = TechGraphStore(
             uri="neo4j://127.0.0.1:7687",
             username="neo4j", 
             password="password",

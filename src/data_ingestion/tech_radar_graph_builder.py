@@ -1,19 +1,12 @@
-import re
-
-from langchain_core.documents import Document
-from src.stores.graph_store import GraphStore
+from src.stores.graph_store import TechGraphStore
 from src.utils.logger import logger
-
 
 class TechRadarGraphBuilder:
     def __init__(self):
-        self.graph_store = GraphStore(
-            uri="neo4j://127.0.0.1:7687",
-            username="neo4j", 
-            password="password",
-            database="neo4j"
-        )
+        self.graph_store = TechGraphStore()
         self.graph_store.graph.query("MATCH (n) DETACH DELETE n")
+        self.create_quadrants()
+        self.create_rings()
     
     def create_radar_node(self, node_data):
         data = {
@@ -34,7 +27,7 @@ class TechRadarGraphBuilder:
             }, {
                 "title": "Tools",
             }, {
-                "title": "Languages and Frameworks",
+                "title": "Languages and \nFrameworks",
             } ]
         }
         query = """
@@ -68,21 +61,23 @@ class TechRadarGraphBuilder:
             "doc": blip_details.get("doc", ""),
             "blip_title": blip_details.get("blip_title", ""),
             "period": blip_details.get("period", ""),
-            "radar_title": blip_details.get("title", ""),
+            "title": blip_details.get("title", ""),
             "radar_volume": blip_details.get("volume", ""),
             "quadrant": blip_details.get("quadrant", "unknown"),
             "ring": blip_details.get("ring", "unknown")
         }
-        
         query = """
-            MATCH (tr:TechRadar {title: $radar_title})
+            MATCH (tr:TechRadar {title: $title})
             MATCH (q:Quadrant {title: $quadrant})
-            CREATE (b:Blip {content: $doc, title: $blip_title}) - [:PART_OF {period: $period, volume: $radar_volume}] -> (tr)
-            CREATE (b) - [:BELONGS_TO {ring: $ring, period: $period, volume: $radar_volume}] -> (q)
+            MATCH (r:Ring {title: $ring})
+            CREATE (b:Blip {content: $doc, title: $blip_title}) - [:PUBLISHED_IN {period: $period, volume: $radar_volume}] -> (tr)
+            CREATE (b) - [:CATEGORIZED_IN] -> (q)
+            CREATE (b) - [:POSITIONED_IN] -> (r)
             """
-        blip = self.graph_store.graph.query(query, blip_data)
-
         
+        self.graph_store.graph.query(query, blip_data)
+        self.graph_store.graph.refresh_schema()
+
     # def store_chunks_in_graph(self):
     #     logger.info("Clearing existing data...")
     #     self.graph_store.graph.query("MATCH (n) DETACH DELETE n")

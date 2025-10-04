@@ -81,7 +81,7 @@ class LLMModelManager:
         """
         params = self._prepare_embedding_model_params()
         params.update(kwargs)
-        provider = params.get("provider").lower()
+        provider = params.get("provider", "").lower()
 
         if provider == str(OPENAI).lower():
             return OpenAIEmbeddings(**params)

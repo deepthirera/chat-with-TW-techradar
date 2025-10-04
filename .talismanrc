@@ -1,12 +1,4 @@
 fileignoreconfig:
-- filename: uv.lock
-  checksum: b212958fb0a615ab51c7a44b9d34b5f3ef75aafbc13293963d93fedeccd5f15d
-- filename: config/app_config.py
-  checksum: fc2721d4da0eb87ddcf05b7100de81df4f1fd6df7f85686f2162fa02eaa5fc5a
 - filename: src/stores/graph_store.py
-  checksum: dc9ff2b0e5d8426f506d89f1d5b2ba84440417f2b6d8ae8c644f3355a34a766f
-- filename: src/data_ingestion/tech_radar_graph_builder.py
-  checksum: 3d53c60de4765e5f9ceabfab3ffb95a3137f0ff8b6d49128f88843d81c157795
-- filename: examples/graph_store_example.py
-  checksum: fe906627f38a2d3572e65281f057416f67dbce4a2ed63f9dfb2fa0e64b36dea8
+  checksum: e6fb30d27137ba09f34272556d2273348bc15e89f61f1f8c3671bc4af53fbb88
 version: "1.0"

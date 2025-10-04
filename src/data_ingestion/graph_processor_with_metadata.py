@@ -1,4 +1,6 @@
+import chunk
 from collections import defaultdict
+from math import log
 import re
 from datetime import datetime
 from langchain_core.documents import Document
@@ -16,44 +18,120 @@ class GraphProcessorWithMetadata:
         self.chunk_overlap = chunk_overlap
         self.graph_builder = TechRadarGraphBuilder()
 
+    # def split_using_lib(self, docs):
+    #     pattern = r'\d{1,3}\. [^"\n]+\n(?:Adopt|Trial|Hold|Assess)'
+    #     splitter = RecursiveCharacterTextSplitter(chunk_size=1000, is_separator_regex=True, separators=[pattern])
+    #     return splitter.split_text(docs)
+
     def split_using_lib(self, docs):
-        pattern = r'\d{1,3}\. [^"\n]+\n(?:Adopt|Trial|Hold|Assess)'
-        splitter = RecursiveCharacterTextSplitter(chunk_size=1000, is_separator_regex=True, separators=[pattern])
-        return splitter.split_text(docs)
+    # Split on the pattern that identifies technology starts
+        separator_pattern = r'(?=\d{1,3}\.\s[^"\n]+\n(?:Adopt|Trial|Hold|Assess))'
+        # separator_pattern = r'\d{1,3}\. [^"\n]+\n(?:Adopt|Trial|Hold|Assess)'
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=1000,
+            is_separator_regex=True, 
+            separators=[separator_pattern],
+            chunk_overlap=0
+        )
+        
+        chunks = splitter.split_text(docs)
+        # Filter out chunks that are just lists (contain multiple numbered items)
+        filtered_chunks = []
+        for chunk in chunks:
+            # chunk = chunk.strip()
+            if chunk and re.match(r'\d{1,3}\.\s', chunk):
+                numbered_items = len(re.findall(r'\n\d{1,3}\.', chunk))
+                # If there's only one numbered item (the main one), it's likely valid
+                if numbered_items <= 1:  # Allow 0 or 1 additional numbered items
+                    filtered_chunks.append(chunk)
+        self._write_to_file(chunks=filtered_chunks)
+        return filtered_chunks
+    
+    # def split_using_lib(self, docs):
+    # # Use a separator pattern that splits BEFORE each numbered item
+    #     separator_pattern = r'(?=\d{1,3}\.\s[^"\n]+\n(?:Adopt|Trial|Hold|Assess))'
+        
+    #     splitter = RecursiveCharacterTextSplitter(
+    #         chunk_size=1000,  # Increase chunk size to avoid cutting off content
+    #         chunk_overlap=0,   # No overlap needed for this use case
+    #         is_separator_regex=True, 
+    #         separators=[separator_pattern]
+    #     )
+        
+    #     chunks = splitter.split_text(docs)
+    #     # Manual splitting - no size limits
+    #     # pattern = r'(?=\d{1,3}\.\s[^"\n]+\n(?:Adopt|Trial|Hold|Assess))'
+    #     # chunks = re.split(pattern, docs)
+        
+    #     # # Remove empty chunks
+    #     # chunks = [chunk.strip() for chunk in chunks if chunk.strip()]
+    #     self._write_to_file(chunks=chunks, filename="before_chunks.txt")
+    #     # Simple filter: keep only chunks that have descriptive content after ring
+    #     valid_chunks = []
+    #     for chunk in chunks:
+    #         chunk = chunk.strip()
+    #         if not chunk:
+    #             continue
+                
+    #         lines = chunk.split('\n')
+    #         if len(lines) >= 3:  # At least: title, ring, some content
+    #             # Check if this looks like a valid technology entry
+    #             first_line = lines[0].strip()
+    #             if re.match(r'\d{1,3}\.\s', first_line):  # Starts with number
+    #                 # Find the ring line
+    #                 for i, line in enumerate(lines[1:3], 1):  # Check next 2 lines
+    #                     if line.strip() in ['Adopt', 'Trial', 'Hold', 'Assess']:
+    #                         # Check if there's content after the ring (not just numbers)
+    #                         if i + 1 < len(lines):
+    #                             next_line = lines[i + 1].strip()
+    #                             # If next line is not empty and not a numbered item
+    #                             if next_line and not re.match(r'\d{1,3}\.', next_line):
+    #                                 valid_chunks.append(chunk)
+    #                         break
+    #     self._write_to_file(chunks=chunks, filename="after_chunks.txt")
+    #     return valid_chunks
+
+
+    def _write_to_file(self, chunks, filename="chunks.txt"):
+        with open(filename, 'w', encoding='utf-8') as f:
+            for i, chunk in enumerate(chunks, 1):
+                f.write(f"CHUNK {i}:\n")
+                f.write("-" * 10 + "\n")
+                f.write(chunk)
+                f.write("\n" + "=" * 40 + "\n\n")
+    
+    def _write_doc_to_file(self, content, file_name):
+        with open(file_name, 'w', encoding='utf-8') as f:
+            f.write(content)
 
     def graph_content(self, loaded_docs):
         """Process each document and split into chunks at title boundaries."""
-        graph_content = defaultdict(dict)
-        self.graph_builder.create_quadrants()
-        # self.graph_builder.create_rings()
         logger.info(f"Chunking documents...{len(loaded_docs)}")
         for doc_dict in loaded_docs:
             base_metadata = self._process_base_metadata(doc_dict.metadata)
             cleaned_page_content = self._cleanup_page_content(doc_dict.page_content)
             all_blips_metadata = self._process_metadata(cleaned_page_content)
             chunks = self.split_using_lib(cleaned_page_content)
-            graph_content[base_metadata["title"]]["metadata"] = base_metadata
-            blips = []
-            other_chunks = []
             self.graph_builder.create_radar_node(base_metadata)
             for chunk in chunks:
-                chunk_title_response = re.match(r'\d{1,3}\. [^"\n]+', chunk)
+                chunk_title_response = re.match(r'(\d{1,3}\.) ([^"\n]+)', chunk)
                 if chunk_title_response:
-                    chunk_title = chunk_title_response.group(0).strip()
+                    chunk_title = chunk_title_response.group(2).strip()
                     current_blip_metadata = all_blips_metadata.get(chunk_title, base_metadata)
+                    # if(current_blip_metadata.get("ring") == "Adopt"):
+                        # logger.info(f"{chunk_title} in {current_blip_metadata["quadrant"]} in {current_blip_metadata["ring"]}") 
                     blip_detail = {
                         "doc": chunk,
                         "blip_title": chunk_title,
                         **current_blip_metadata,
                         **base_metadata
                     }
-                    self.graph_builder.create_blip_nodes(blip_detail)
-                    blips.extend([blip_detail])
-                else:
-                    other_chunks.extend([Document(page_content=chunk, metadata=base_metadata) ])
-            graph_content[base_metadata["title"]]["blips"] = blips
-            graph_content[base_metadata["title"]]["other_chunks"] = other_chunks
-        return graph_content
+                    try:
+                        self.graph_builder.create_blip_nodes(blip_detail)
+                    except Exception as e:
+                        print(f"Query failed with error: {e}")
+                        print(f"Parameters: {blip_detail}")
+        return self.graph_builder
 
     def _cleanup_page_content(self, raw_page_content):
         mega_pattern = (
@@ -84,11 +162,14 @@ class GraphProcessorWithMetadata:
                         for searched_ring_item in re.findall(r"\d+\..*?(?=\n\d+\.|\n*$)", ring_data, re.DOTALL):
                             ring_item = searched_ring_item.strip()
                             if ring_item and re.match(r"\d+\.", ring_item):
-                                cleaned_item = re.sub(r"\s+", " ", ring_item).strip()
-                                result[cleaned_item] = {
-                                    "quadrant": quadrant_title,
-                                    "ring": ring_title,
-                                }
+                                chunk_title_response = re.match(r'(\d{1,3}\.) ([^"\n]+)', ring_item)
+                                if chunk_title_response:
+                                    chunk_title = chunk_title_response.group(2)
+                                    cleaned_item = re.sub(r"\s+", " ", chunk_title).strip()
+                                    result[cleaned_item] = {
+                                        "quadrant": quadrant_title,
+                                        "ring": ring_title,
+                                    }
         return result
 
     def _extract_whole_quadrant(self, quadrant_name, cleaned_text):

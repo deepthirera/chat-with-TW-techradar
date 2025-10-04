@@ -41,8 +41,12 @@ class RAGDataManager:
             self._store_in_vectordb(chunked_docs)
         elif processor_type == RAGDataManager.GRAPH_BASIC:
             processor = GraphProcessorWithMetadata()
-            graph_content = processor.graph_content(self.loaded_docs)
-            # TechRadarGraphBuilder().()
+            graph_builder = processor.graph_content(self.loaded_docs)
+            self._create_graph_vectors(graph_builder)
+
+    def _create_graph_vectors(self, graph_builder: TechRadarGraphBuilder):
+        graph_builder.graph_store.graph.refresh_schema()
+        graph_builder.graph_store.build_vector_index(index_name="blips", node_label="Blip", text_node_properties=["content", "title"])
 
     def _store_in_vectordb(self, chunked_docs):
         try:
