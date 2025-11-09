@@ -4,13 +4,10 @@ This module provides a GraphStore class that handles connections to Neo4j
 and operations for storing and retrieving graph data from technology radar documents.
 """
 
-import os
-from typing import Any, Dict, List, Optional
-
-from click import password_option
+from typing import Optional
 
 from langchain_neo4j import Neo4jGraph
-
+from config import GRAPH_CYPHER_PROMPT
 from config.app_config import (
     NEO4J_DATABASE,
     NEO4J_PASSWORD,
@@ -21,6 +18,7 @@ from src.utils.logger import logger
 from src.llm.model_manager import LLMModelManager
 from langchain_community.vectorstores import Neo4jVector
 from langchain_neo4j import GraphCypherQAChain
+from langchain.chains import RetrievalQA
 from langchain_core.prompts import PromptTemplate
 
 
@@ -42,11 +40,11 @@ class TechGraphStore:
             password: Neo4j password (defaults to NEO4J_PASSWORD env var)
             database: Neo4j database name (defaults to NEO4J_DATABASE env var or 'neo4j')
         """
+        self.llm_model_manager = LLMModelManager()
         self.uri = uri or NEO4J_URI
         self.username = username or NEO4J_USERNAME
         self.password = password or NEO4J_PASSWORD
         self.database = database or NEO4J_DATABASE
-        self.embedding_model = LLMModelManager().get_embedding_model()
         self.load()
     
     def load(self):
@@ -72,24 +70,32 @@ class TechGraphStore:
             self.graph.close()
             logger.info("Neo4j connection closed")
     
-    def build_vector_index(self, index_name, node_label, text_node_properties):
+    def build_vector_index(self, index_name, node_label, text_node_properties, embedding_node_property):
         return Neo4jVector.from_existing_graph(
-            self.embedding_model,
+            embedding=self.llm_model_manager.get_embedding_model(),
             url=self.uri,
             username=self.username,
             password=self.password,
             index_name=index_name,
             node_label=node_label,
             text_node_properties=text_node_properties,
-            embedding_node_property="embedding",
+            embedding_node_property=embedding_node_property,
         )
     
-    def as_retriever(self):
+    def semantic_retriever(self):
+        semantic_chain = RetrievalQA.from_chain_type(
+            llm=self.llm_model_manager.get_chat_model(),
+            chain_type="stuff",
+            retriever=self.build_vector_index(index_name="blip_embeddings", node_label="Blip", text_node_properties=["content"], embedding_node_property="contentEmbedding").as_retriever()
+        )
+        return semantic_chain
+    
+    def cypher_retriever(self):
         self.graph.refresh_schema()
 
         cypher_chain = GraphCypherQAChain.from_llm(
             graph=self.graph, 
-            llm=LLMModelManager().get_chat_model(), 
+            llm=self.llm_model_manager.get_chat_model(), 
             verbose=True, 
             allow_dangerous_requests=True,
             cypher_prompt=self._get_cypher_prompt(),
@@ -100,20 +106,7 @@ class TechGraphStore:
     def _get_cypher_prompt(self):
         return PromptTemplate(
             input_variables=["schema", "question"],
-            template="""
-    You are a Neo4j expert. Given an input question, create a syntactically correct Cypher query.
-
-    Schema: {schema}
-
-    Important Notes:
-    - Ring titles are exactly: "Adopt", "Trial", "Assess", "Hold"
-    - Quadrant titles are exactly: "Techniques", "Platforms", "Tools", "Languages and Frameworks"
-    - Use MATCH clauses to connect Blip nodes to Ring and Quadrant nodes
-    - For time-based queries, use TechRadar.year or TechRadar.period properties
-    - Always return meaningful properties like b.title, b.content
-
-    Question: {question}
-    Cypher Query:"""
+            template=GRAPH_CYPHER_PROMPT
         )
 
     def _get_qa_prompt(self):

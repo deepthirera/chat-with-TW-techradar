@@ -46,7 +46,7 @@ class RAGDataManager:
 
     def _create_graph_vectors(self, graph_builder: TechRadarGraphBuilder):
         graph_builder.graph_store.graph.refresh_schema()
-        graph_builder.graph_store.build_vector_index(index_name="blips", node_label="Blip", text_node_properties=["content", "title"])
+        graph_builder.graph_store.build_vector_index(index_name="blip_embeddings", node_label="Blip", text_node_properties=["content"], embedding_node_property="contentEmbedding")
 
     def _store_in_vectordb(self, chunked_docs):
         try:

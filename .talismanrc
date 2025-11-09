@@ -1,4 +1,4 @@
 fileignoreconfig:
-- filename: src/stores/graph_store.py
-  checksum: e6fb30d27137ba09f34272556d2273348bc15e89f61f1f8c3671bc4af53fbb88
+- filename: main.py
+  checksum: 297d75634feb946f9e9aed98cda6d56accb85b292f073758543c64744c64c1fd
 version: "1.0"
