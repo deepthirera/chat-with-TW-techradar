@@ -184,10 +184,16 @@ class GraphProcessorWithMetadata:
         source = metadata.get("source")
         filename, title_parts, creation_date, period = "", "", "", ""
         if source:
-            filename = source.split("/")[-1] 
-            title_parts = filename.title().split("_")[1:-1] # error handling required
+            filename = source.split("/")[-1]
+            # Validate filename structure before extracting title parts
+            parts = filename.title().split("_")
+            title_parts = parts[1:-1] if len(parts) >= 3 else []
         creation_date = metadata.get("creationdate", "")
-        period = datetime.fromisoformat(creation_date).strftime("%B %Y") if creation_date else "" # error handling required
+        # Safely parse date with try-except
+        try:
+            period = datetime.fromisoformat(creation_date).strftime("%B %Y") if creation_date else ""
+        except (ValueError, TypeError):
+            period = ""
         return  {
             "creationdate": creation_date,
             "filename": filename,
