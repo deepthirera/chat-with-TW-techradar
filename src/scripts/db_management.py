@@ -2,10 +2,12 @@ from dotenv import load_dotenv
 
 from config import RAW_DATA_DIR
 from src.data_ingestion.doc_processor_with_metadata import DocProcessorWithMetadata
+from src.data_ingestion.graph_processor_with_metadata import GraphProcessorWithMetadata
 from src.data_ingestion.document_loader import DocumentLoader
 from src.data_ingestion.document_processor import DocumentProcessor
+from src.data_ingestion.tech_radar_graph_builder import TechRadarGraphBuilder
 from src.utils.logger import logger
-from src.vector_store.vector_store import VectorStore
+from src.stores.vector_store import VectorStore
 
 
 def vector_migrate_and_seed():
@@ -16,9 +18,14 @@ def vector_metadata_migrate_and_seed():
     """Migrate and seed the vector database with documents and related metadata."""
     RAGDataManager().migrate_and_seed(RAGDataManager.VECTOR_METADATA)
 
+def base_graph_migrate_and_seed():
+    """Migrate and seed the vector database with documents and related metadata."""
+    RAGDataManager().migrate_and_seed(RAGDataManager.GRAPH_BASIC)
+
 class RAGDataManager:
     VECTOR_BASIC = "vector_basic"
     VECTOR_METADATA = "vector_with_metadata"
+    GRAPH_BASIC = "graph_basic"
     def __init__(self) -> None:
         load_dotenv()
         self.loaded_docs = DocumentLoader(str(RAW_DATA_DIR)).load_radar_files()
@@ -26,11 +33,20 @@ class RAGDataManager:
     def migrate_and_seed(self, processor_type=VECTOR_BASIC):
         if processor_type == RAGDataManager.VECTOR_BASIC:
             processor = DocumentProcessor()
+            chunked_docs = processor.chunk_pdfs(self.loaded_docs)
+            self._store_in_vectordb(chunked_docs)
         elif processor_type == RAGDataManager.VECTOR_METADATA:
             processor = DocProcessorWithMetadata()
+            chunked_docs = processor.chunk_pdfs(self.loaded_docs)
+            self._store_in_vectordb(chunked_docs)
+        elif processor_type == RAGDataManager.GRAPH_BASIC:
+            processor = GraphProcessorWithMetadata()
+            graph_builder = processor.graph_content(self.loaded_docs)
+            self._create_graph_vectors(graph_builder)
 
-        chunked_docs = processor.chunk_pdfs(self.loaded_docs)
-        self._store_in_vectordb(chunked_docs)
+    def _create_graph_vectors(self, graph_builder: TechRadarGraphBuilder):
+        graph_builder.graph_store.graph.refresh_schema()
+        graph_builder.graph_store.build_vector_index(index_name="blip_embeddings", node_label="Blip", text_node_properties=["content"], embedding_node_property="contentEmbedding")
 
     def _store_in_vectordb(self, chunked_docs):
         try:

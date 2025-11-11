@@ -1,5 +1,5 @@
 import re
-
+from datetime import datetime
 from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
@@ -81,14 +81,16 @@ class DocProcessorWithMetadata:
 
     def _process_base_metadata(self, metadata):
         source = metadata.get("source")
-        filename, title_parts = "", ""
+        filename, title_parts, creation_date, period = "", "", "", ""
         if source:
-            filename = source.split("/")[-1]
-            title_parts = filename.title().split("_")[1:-1]
+            filename = source.split("/")[-1] 
+            title_parts = filename.title().split("_")[1:-1] # error handling required
+        creation_date = metadata.get("creationdate", "")
+        period = datetime.fromisoformat(creation_date).strftime("%B %Y") if creation_date else "" # error handling required
         return  {
-            "creationdate": metadata.get("creationdate", ""),
+            "creationdate": creation_date,
             "filename": filename,
             "title": " ".join(title_parts),
             "volume": title_parts[-1][-2:] if title_parts else "",
-            "period": "April 2025",
+            "period": period,
         }
