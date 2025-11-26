@@ -7,7 +7,6 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_litellm import ChatLiteLLM
 from langchain_ollama import OllamaEmbeddings
 from langchain_openai import OpenAIEmbeddings
-from litellm import completion
 
 from config import (
     DEFAULT_EMBEDDING_MODEL,
@@ -43,15 +42,14 @@ class LLMModelManager:
 
         Args:
             messages: List of message dictionaries with 'role' and 'content'
-            model: Model to use. If None, uses default model from config
             **kwargs: Additional parameters to pass to the model
 
         Returns:
             Completion response from the model
         """
-        params = self._prepare_chat_model_params()
+        params = self._prepare_model_params(MODELS_CONFIG, self.model_alias)
         params.update(kwargs)
-        return completion(
+        return litellm.completion(
             messages=messages,
             drop_params=True,
             **params,
@@ -66,11 +64,13 @@ class LLMModelManager:
         Returns:
             An instance of the appropriate chat model class.
         """
-        params = self._prepare_chat_model_params()
+        params = self._prepare_model_params(MODELS_CONFIG, self.model_alias)
         params.update(kwargs)
         return ChatLiteLLM(**params)
 
-    def get_embedding_model(self, **kwargs) -> Any:
+    def get_embedding_model(
+        self, **kwargs,
+    ) -> OpenAIEmbeddings | GoogleGenerativeAIEmbeddings | OllamaEmbeddings:
         """Get an embedding model instance based on the configured provider.
 
         Args:
@@ -78,10 +78,18 @@ class LLMModelManager:
 
         Returns:
             An instance of the appropriate embedding model class.
+
+        Raises:
+            ValueError: If the provider is not supported.
         """
-        params = self._prepare_embedding_model_params()
+        params = self._prepare_model_params(EMBEDDING_MODELS_CONFIG, self.embedding_model_alias)
         params.update(kwargs)
-        provider = params.get("provider").lower()
+        provider = params.get("provider")
+
+        if not provider:
+            raise ValueError("Provider not specified in model configuration")
+
+        provider = provider.lower()
 
         if provider == str(OPENAI).lower():
             return OpenAIEmbeddings(**params)
@@ -89,40 +97,46 @@ class LLMModelManager:
             params["google_api_key"] = os.environ["GEMINI_API_KEY"]
             return GoogleGenerativeAIEmbeddings(**params)
         if provider == str(OLLAMA).lower():
-            model = params.get("model")
-            base_url = params.get("api_base")
-            return OllamaEmbeddings(model=model, base_url=base_url)
-        error_msg = f"Unsupported provider: {provider}. Must be one of: openai, google, ollama"
-        raise ValueError(error_msg)
+            return OllamaEmbeddings(
+                model=params.get("model"),
+                base_url=params.get("api_base"),
+            )
+        raise ValueError(
+            f"Unsupported provider: {provider}. "
+            f"Must be one of: {OPENAI.lower()}, {GEMINI.lower()}, {OLLAMA.lower()}",
+        )
 
-    def _prepare_chat_model_params(self):
+    def _prepare_model_params(self, model_configs: list[dict], model_alias: str) -> dict:
+        """Prepare model parameters by merging common parameters with model-specific config.
+
+        Args:
+            model_configs: List of model configurations to search through.
+            model_alias: The alias of the model to find configuration for.
+
+        Returns:
+            Dictionary of merged parameters.
+        """
         params = LLM_COMMON_PARAMETERS.copy()
 
-        for model_config in MODELS_CONFIG:
-            if model_config["model_alias"] == self.model_alias:
+        for model_config in model_configs:
+            if model_config["model_alias"] == model_alias:
                 params.update(model_config)
                 break
-        return params
 
-    def _prepare_embedding_model_params(self):
-        params = LLM_COMMON_PARAMETERS.copy()
-
-        for model_config in EMBEDDING_MODELS_CONFIG:
-            if model_config["model_alias"] == self.embedding_model_alias:
-                params.update(model_config)
-                break
         return params
 
     def _log_success(self, kwargs, _, start_time, end_time):
         """Callback for successful API calls."""
-        logger.info("LITELLM: in success callback function")
-        logger.info("kwargs %s", kwargs["litellm_call_id"])
-        logger.info("start_time %s", start_time)
-        logger.info("end_time %s", end_time)
+        logger.info(
+            "LiteLLM API call successful - Call ID: %s, Duration: %s",
+            kwargs.get("litellm_call_id"),
+            end_time - start_time,
+        )
 
     def _log_failure(self, _, error_response, start_time, end_time):
         """Callback for failed API calls."""
-        logger.error("LITELLM: in failure callback function")
-        logger.error("error_response %s", error_response)
-        logger.error("start_time %s", start_time)
-        logger.error("end_time %s", end_time)
+        logger.error(
+            "LiteLLM API call failed - Error: %s, Duration: %s",
+            error_response,
+            end_time - start_time,
+        )
